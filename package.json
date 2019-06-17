@@ -1,0 +1,26 @@
+{
+  "name": "nbw",
+  "version": "1.0.0",
+  "description": "A command line tool working as a npm wrapper.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \\\"Error: no test specified\\\" && exit 1"
+  },
+  "bin": {
+    "nbw": "bin/nbw.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/616e6b7572/nbw.git"
+  },
+  "keywords": [
+    "npm wrapper",
+    "js"
+  ],
+  "author": "616e6b7572 <nbw+616e6b7572@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/616e6b7572/nbw/issues"
+  },
+  "homepage": "https://github.com/616e6b7572/nbw#readme"
+}
