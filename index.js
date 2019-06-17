@@ -161,7 +161,7 @@ const CLI = function(){
 	  if(index > 1){argv.push(val);}
 	});
 	this.boot = function(){		
-		Boot.execute();
+		//Boot.execute();
 	}
 	this.install = function(argv){
 		var install = new Install(argv); 
