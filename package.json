@@ -1,10 +1,14 @@
 {
   "name": "nbw",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A command line tool working as a npm wrapper.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \\\"Error: no test specified\\\" && exit 1"
+    "test": "echo \\\"Error: no test specified\\\" && exit 1",
+    "lint":"./node_modules/.bin/eslint index.js",
+    "lint-fix":"./node_modules/.bin/eslint --fix index.js",
+    "lint-spec":"./node_modules/.bin/eslint ./spec/*.js",
+    "lint-spec-fix":"./node_modules/.bin/eslint --fix ./spec/*.js"
   },
   "bin": {
     "nbw": "bin/nbw.js"
@@ -22,5 +26,12 @@
   "bugs": {
     "url": "https://github.com/616e6b7572/nbw/issues"
   },
-  "homepage": "https://github.com/616e6b7572/nbw#readme"
+  "homepage": "https://github.com/616e6b7572/nbw#readme",
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "jasmine": "^3.4.0",
+    "karma": "^4.1.0",
+    "karma-firefox-launcher": "^1.1.0",
+    "karma-jasmine": "^2.0.1"
+  }
 }
