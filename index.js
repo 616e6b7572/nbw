@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const os = require('os');
+const PATH = require('path');
 const { execSync } = require('child_process');
 const { exec } = require('child_process');
 const util = require('util');
@@ -33,7 +34,7 @@ class BaseExec{
 	}
 	executeSync(cmd){
 		var r = execSync(cmd);
-		getConsole().log(r);
+		getConsole().log(r.toString('utf8'));
 	}
 	execFile(cmd, args){
 		const execFile = util.promisify(require('child_process').execFile);
@@ -152,31 +153,69 @@ class Install extends Exec{
 		Boot.execute();
 		
 		var flags = [];
+		var cmd = [];
 		
 		for(let i in this.argv){
-			if(this.argv[i].search('--') > -1){
+			if(this.argv[i].search('-') > -1){
 				flags.push(this.argv[i]);
+			}
+			else{
+				cmd.push(this.argv[i]);
 			}
 		}
 		
 		super.executeSync('cd '+SDIR+' && npm '+this.argv.join(' '));
 		
-		this.postInstall(flags);
+		this.postInstall(flags, cmd);
 		
 		//super.execute('npm ');
 	}
-	postInstall(flags){
-		
-		
-		fs.readFile('./package.json', 'utf8', function readFileCallback(err, data){
+	postInstall(flags, cmd){
+		cmd.shift();
+		var t = cmd.shift();
+		t = PATH.basename(t);
+		fs.readFile('./node_modules/'+t+'/package.json', 'utf8', (err, data) => {
 			if (err){
-				getConsole().log(err);
+				getProcess().stdout.write(`${err}`);
+				getProcess().exit();
 			} else {
-				
-				flags = JSON.parse(datas);
-				//getConsole().log(flags['devDependencies']);
-				//flags = JSON.stringify(flags);
-				//fs.writeFileSync('package.json', flags, 'utf8');
+				data = JSON.parse(data);
+				var dep =[t, '^'+data.version];
+				fs.readFile('./package.json', 'utf8', (err, data) => {
+					if (err){
+						getProcess().stdout.write(`${err}`);
+						getProcess().exit();
+					} else {
+						for(let i=0; i<flags.length;i++){
+							data = JSON.parse(data);
+							if(flags[i] == '--save'){
+								if(data.dependencies == undefined){
+									data['dependencies'] = {};
+								}
+								data.dependencies[dep[0]] = dep[1]; 
+							}
+							else if(flags[i] == '--save-dev'){
+								if(data.devDependencies == undefined){
+									data['devDependencies'] = {};
+								}
+								data.devDependencies[dep[0]] = dep[1]; 
+							}
+							else if(flags[i] == '--save-optional'){
+								if(data.optionalDependencies == undefined){
+									data['optionalDependencies'] = {};
+								}
+								data.optionalDependencies[dep[0]] = dep[1];
+							}
+							data = JSON.stringify(data, null, 2);
+							fs.writeFile('./package.json', data, 'utf8',(err) => {
+								if(err){
+									getProcess().stdout.write(`${err}`);
+									getProcess().exit();
+								}
+							});
+						}
+					}
+				});
 			}
 		});
 	}
@@ -216,6 +255,10 @@ const CLI = function(){
 		var install = new Install(argv); 
 		install.execute();
 	};
+	this.i = function(argv){
+		var install = new Install(argv); 
+		install.execute();
+	};
 	this.init = function(argv){
 		var init = new Init(argv); 
 		init.execute();
@@ -236,7 +279,10 @@ const CLI = function(){
 
 const nbw = function(){
 	var cli = new CLI();
-	cli.execute();
+	cli.execute();	
 };
+
+
+
 
 module.exports = nbw;
