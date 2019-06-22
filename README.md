@@ -21,3 +21,6 @@ It will create a package.json like npm does.
 ```
 
 above command will download gencls package to a main repo of nbw.
+
+## Contributing
+	Feel free to contribute.
