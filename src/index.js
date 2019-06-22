@@ -1,54 +1,51 @@
 'use strict';
 const fs = require('fs');
 const os = require('os');
-const PATH = require('path');
-const { execSync } = require('child_process');
-const { exec } = require('child_process');
+const { execSync, exec } = require('child_process');
 const util = require('util');
 const SDIR = os.homedir()+'/.nbw';
 
-function getProcess(){
-	// eslint-disable-next-line no-undef
-	return process;
-}
-
-function getConsole(){
-	// eslint-disable-next-line complexity
-	return console;
-}
 
 class BaseExec{
 	constructor(){
 		
 	}
+	getProcess(){
+		// eslint-disable-next-line no-undef
+		return process;
+	}
+	getConsole(){
+		// eslint-disable-next-line complexity
+		return console;
+	}
 	execute(cmd){
 		exec(cmd, (error, stdout, stderr) => {
 			if (error) {
-				getConsole().error(`exec error: ${error}`);
+				this.getConsole().error(`exec error: ${error}`);
 				return;
 			}
-			getProcess().stdout.write(`${stdout}`);
-			getConsole().error(`${stderr}`);
+			this.getProcess().stdout.write(`${stdout}`);
+			this.getConsole().error(`${stderr}`);
 		});
 	}
-	executeSync(cmd){
-		var r = execSync(cmd);
-		getConsole().log(r.toString('utf8'));
+	executeSync(cmd, opts){
+		var r = execSync(cmd, opts);
+		this.getConsole().log(r.toString('utf8'));
 	}
 	execFile(cmd, args){
 		const execFile = util.promisify(require('child_process').execFile);
 		async function getVersion(cmd, args) {
 			const { stdout } = await execFile(cmd, args, (error, stdout, stderr) => {
 				if (error) {
-					getConsole().error(`exec error: ${error}`);
+					this.getConsole().error(`exec error: ${error}`);
 					return;
 				}
 				stdout = stdout.replace('npm', 'nbw');
 				stderr = stderr.replace('npm', 'nbw');
-				getProcess().stdout.write(`${stdout}`);
-				getConsole().error(`${stderr}`);
-			}).catch((e) => {getProcess().stdout.write(e);});
-			getProcess().stdout.write(stdout);
+				this.getProcess().stdout.write(`${stdout}`);
+				this.getConsole().error(`${stderr}`);
+			}).catch((e) => {this.getProcess().stdout.write(e);});
+			this.getProcess().stdout.write(stdout);
 		} 
 		getVersion(cmd, args);	
 	}
@@ -72,8 +69,8 @@ class Exec extends BaseExec{
 			}
 		}
 		catch(e){
-			getProcess().stdout.write('ERROR: File "package.json" not available.\n Try: npm init [-f|--force|-y|--yes] \n');
-			getProcess().exit();
+			this.getProcess().stdout.write('ERROR: File "package.json" not available.\n Try: npm init [-f|--force|-y|--yes] \n');
+			this.getProcess().exit();
 		}
 	}
 }
@@ -83,7 +80,7 @@ class Boot extends BaseExec{
 		super();	
 	}
 	static getNPM(){
-		var path = getProcess().env.PATH.split(':');
+		var path = this.getProcess().env.PATH.split(':');
 		var npm = '';
 		var i = 0;
 		for(i in path){
@@ -94,12 +91,12 @@ class Boot extends BaseExec{
 				break;
 			}
 			catch(e){
-				//getProcess().stdout.write(`${e}`);
+				//this.getProcess().stdout.write(`${e}`);
 			}
 		}
 		if(npm == ''){
-			getProcess().stdout.write('ERROR: Unable  to find "npm", Please make sure it\'s in your ENV PATH. \n');
-			getProcess().exit();	
+			this.getProcess().stdout.write('ERROR: Unable  to find "npm", Please make sure it\'s in your ENV PATH. \n');
+			this.getProcess().exit();	
 		}
 		return npm;
 	}
@@ -135,8 +132,8 @@ class Boot extends BaseExec{
 					);
 				}
 				catch(e){
-					getProcess().stdout.write('ERROR: Unable to create global node_modules folder. Please try again! \n');
-					getProcess().exit();
+					this.getProcess().stdout.write('ERROR: Unable to create global node_modules folder. Please try again! \n');
+					this.getProcess().exit();
 				}	
 			}
 		}
@@ -150,9 +147,21 @@ class Install extends Exec{
 	}
 	execute(){
 		Boot.execute();
+		
+		var flags = [];
+		var cmd = [];
+		
+		for(let i in this.argv){
+			if(this.argv[i].search('-') > -1){
+				flags.push(this.argv[i]);
+			}
+			else{
+				cmd.push(this.argv[i]);
+			}
+		}
 		var npm = Boot.getNPM();
 		super.fork(`${npm}`, this.argv);
-	}	
+	}
 }
 
 class Init extends BaseExec{
@@ -181,7 +190,7 @@ class NPM extends BaseExec{
 
 const CLI = function(){
 	var argv = [];
-	getProcess().argv.forEach((val, index) => {
+	this.getProcess().argv.forEach((val, index) => {
 		if(index > 1){argv.push(val);}
 	});
 	this.install = function(argv){
@@ -215,7 +224,4 @@ const nbw = function(){
 	cli.execute();	
 };
 
-
-
-
-module.exports = nbw;
+module.exports = {BaseExec, Exec, Boot, Install, Init, NPM, CLI};

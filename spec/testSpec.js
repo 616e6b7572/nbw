@@ -1,7 +1,9 @@
-const nbw = require('../index.js');
+const {BaseExec, Exec, Boot, Install, Init, NPM, CLI} = require('../src/index.js');
 
 describe('test', function() {
 	it('testing GenCls', function() {
-		expect(1).toBe(1);
+		var c = new BaseExec();
+		c = c.getConsole();
+		expect(c.log('testing console')).toBe(undefined);
 	});
 });
