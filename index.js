@@ -1,9 +1,7 @@
 'use strict';
 const fs = require('fs');
 const os = require('os');
-const PATH = require('path');
-const { execSync } = require('child_process');
-const { exec } = require('child_process');
+const { execSync, exec } = require('child_process');
 const util = require('util');
 const SDIR = os.homedir()+'/.nbw';
 
@@ -32,8 +30,8 @@ class BaseExec{
 			getConsole().error(`${stderr}`);
 		});
 	}
-	executeSync(cmd){
-		var r = execSync(cmd);
+	executeSync(cmd, opts){
+		var r = execSync(cmd, opts);
 		getConsole().log(r.toString('utf8'));
 	}
 	execFile(cmd, args){
@@ -54,7 +52,7 @@ class BaseExec{
 		getVersion(cmd, args);	
 	}
 	fork(cmd, args){
-		const cp = require('child_getProcess()');
+		const cp = require('child_process');
 		const n = cp.fork(cmd, args);
 		return n;
 	}
@@ -95,7 +93,7 @@ class Boot extends BaseExec{
 				break;
 			}
 			catch(e){
-				getProcess().stdout.write(`${e}`);
+				//getProcess().stdout.write(`${e}`);
 			}
 		}
 		if(npm == ''){
@@ -163,63 +161,9 @@ class Install extends Exec{
 				cmd.push(this.argv[i]);
 			}
 		}
-		
-		super.executeSync('cd '+SDIR+' && npm '+this.argv.join(' '));
-		
-		this.postInstall(flags, cmd);
-		
-		//super.execute('npm ');
+		var npm = Boot.getNPM();
+		super.fork(`${npm}`, this.argv);
 	}
-	postInstall(flags, cmd){
-		cmd.shift();
-		var t = cmd.shift();
-		t = PATH.basename(t);
-		fs.readFile('./node_modules/'+t+'/package.json', 'utf8', (err, data) => {
-			if (err){
-				getProcess().stdout.write(`${err}`);
-				getProcess().exit();
-			} else {
-				data = JSON.parse(data);
-				var dep =[t, '^'+data.version];
-				fs.readFile('./package.json', 'utf8', (err, data) => {
-					if (err){
-						getProcess().stdout.write(`${err}`);
-						getProcess().exit();
-					} else {
-						for(let i=0; i<flags.length;i++){
-							data = JSON.parse(data);
-							if(flags[i] == '--save'){
-								if(data.dependencies == undefined){
-									data['dependencies'] = {};
-								}
-								data.dependencies[dep[0]] = dep[1]; 
-							}
-							else if(flags[i] == '--save-dev'){
-								if(data.devDependencies == undefined){
-									data['devDependencies'] = {};
-								}
-								data.devDependencies[dep[0]] = dep[1]; 
-							}
-							else if(flags[i] == '--save-optional'){
-								if(data.optionalDependencies == undefined){
-									data['optionalDependencies'] = {};
-								}
-								data.optionalDependencies[dep[0]] = dep[1];
-							}
-							data = JSON.stringify(data, null, 2);
-							fs.writeFile('./package.json', data, 'utf8',(err) => {
-								if(err){
-									getProcess().stdout.write(`${err}`);
-									getProcess().exit();
-								}
-							});
-						}
-					}
-				});
-			}
-		});
-	}
-	
 }
 
 class Init extends BaseExec{
@@ -281,8 +225,5 @@ const nbw = function(){
 	var cli = new CLI();
 	cli.execute();	
 };
-
-
-
 
 module.exports = nbw;
